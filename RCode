@@ -1,0 +1,164 @@
+#this code includes statistical analysis for the manuscript
+#"Cold tolerance across trophic guilds: endoparasitic wasps 
+#and their fly host have similar responses to low temperatures"
+#by Trinity McIntyre, Lalitya Andaloori, Glen Ray Hood, 
+#Jeffrey L. Feder, Daniel A. Hahn, Gregory J. Ragland, Jantina Toxopeus
+
+#All data are available as a supplementary Excel file
+#associated with the manuscript itself. This Excel file
+#contains explanations of all abbreviations and variable names.
+#Each worksheet in the Excel file can be saved as its own  
+#.csv or .txt file for use in the code below with R or RStudio.
+
+
+##############################################################
+##                                                          ##
+##               Diapause phenotype stats                   ##
+##                                                          ##
+##############################################################
+
+#####Chi squared tests####
+#formatting data for Chi-square test
+counts <- read.csv("DiapauseClassesSummary.csv", stringsAsFactors = FALSE)
+str(counts)
+counts
+#diapause categories in separate rows
+#species in columns (compare among columns)
+
+#remove first column and add row names instead
+counts <- counts[,2:4]
+rownames(counts) <- c("ND", "WD", "D")
+
+chisq.test(counts)
+#    Pearson's Chi-squared test
+#
+#data:  counts
+#X-squared = 202.39, df = 4, p-value < 2.2e-16
+
+##############################################################
+##                                                          ##
+##           Supercooling point (SCP) analysis              ##
+##                                                          ##
+##############################################################
+
+my.data <- read.csv("SCPs.csv")
+str(my.data)
+
+#removing unidentified individuals
+my.data <- subset(my.data, my.data$Species!="Unk")
+my.data <- subset(my.data, my.data$Species!="#N/A")
+
+#####ANCOVA#######
+#checking assumptions of normality
+library(car)
+qqPlot(my.data$Corrected.SCP)
+hist(my.data$Corrected.SCP)
+#generally good; only a couple of outliers (high SCPs)
+
+my.model <- aov(my.data$Corrected.SCP ~ my.data$Mass + 
+                  my.data$Winter.length + my.data$Species)
+anova(my.model)
+summary(my.model)
+
+#Analysis of Variance Table
+#
+#Response: my.data$Corrected.SCP
+#                      Df Sum Sq Mean Sq F value Pr(>F)
+#my.data$Mass           1   0.29  0.2927  0.0588 0.8092
+#my.data$Winter.length  1   1.82  1.8182  0.3651 0.5477
+#my.data$Species        3   4.70  1.5678  0.3148 0.8146
+#Residuals             68 338.62  4.9797     
+
+
+##############################################################
+##                                                          ##
+##             Post-chill eclosion analysis                 ##
+##                                                          ##
+##############################################################
+
+####first check if proportion of each wasp species post-chill
+####is similar or different after different chill durations
+
+my.data <- read.csv("PostChillEclosion.csv")
+str(my.data)
+
+#removing unidentified individuals
+my.data <- subset(my.data, my.data$Species!="Dead")
+
+#subsetting data by species
+Ucan.data <- subset(my.data, my.data$Species=="U.can")
+Dall.data <- subset(my.data, my.data$Species=="D.alloeum")
+Dmel.data <- subset(my.data, my.data$Species=="D.mellea")
+fly.data <- subset(my.data, my.data$Species=="R.pom")
+
+#calculating total N eclosed for each species
+Ucan.Y <- tapply(Ucan.data$N.eclosed, Ucan.data$TimeinFridge, sum)
+Dall.Y <- tapply(Dall.data$N.eclosed, Dall.data$TimeinFridge, sum)
+Dmel.Y <- tapply(Dmel.data$N.eclosed, Dmel.data$TimeinFridge, sum)
+fly.Y <- tapply(fly.data$N.eclosed, fly.data$TimeinFridge, sum)
+
+#####Chi squared tests####
+#formatting data for Chi-square test
+counts <- as.data.frame(rbind(Ucan.Y, Dall.Y, Dmel.Y))
+counts[3,2:3] <- 0
+counts
+
+chisq.test(counts)
+#Pearson's Chi-squared test
+#
+#data:  counts
+#X-squared = 2.1374, df = 4, p-value = 0.7105
+
+#####next check if post-chill eclosion patterns differ among species
+#####for each chill duration
+
+my.data <- read.csv("PostChillEclosion.csv")
+str(my.data)
+
+#removing unidentified individuals
+my.data <- subset(my.data, my.data$Species!="Dead")
+
+#####KW ANOVA####
+#checking assumptions of normality
+library(car)
+qqPlot(my.data$EclosionTime)
+hist(my.data$EclosionTime)
+##hrm, bimodal distribution --> will have to use non-parametric tests
+
+my.data.2 <- my.data
+my.data.2$Index <- paste(my.data.2$Species, my.data.2$TimeinFridge)
+head(my.data.2)
+my.data.2 <- my.data.2[order(my.data.2$Index,my.data.2$EclosionTime),]
+
+#subsetting data by chill time and species
+Ucan.8 <- subset(my.data.2, my.data.2$Index=="U.can 8")
+Dall.8 <- subset(my.data.2, my.data.2$Index=="D.alloeum 8")
+Dmel.8 <- subset(my.data.2, my.data.2$Index=="D.mellea 8")
+fly.8 <- subset(my.data.2, my.data.2$Index=="R.pom 8")
+
+Ucan.16 <- subset(my.data.2, my.data.2$Index=="U.can 16")
+Dall.16 <- subset(my.data.2, my.data.2$Index=="D.alloeum 16")
+Dmel.16 <- subset(my.data.2, my.data.2$Index=="D.mellea 16") #no values
+fly.16 <- subset(my.data.2, my.data.2$Index=="R.pom 16")
+
+Ucan.24 <- subset(my.data.2, my.data.2$Index=="U.can 24") #only two eclosed
+Dall.24 <- subset(my.data.2, my.data.2$Index=="D.alloeum 24") #only one eclosed
+Dmel.24 <- subset(my.data.2, my.data.2$Index=="D.mellea 24") #no values
+fly.24 <- subset(my.data.2, my.data.2$Index=="R.pom 24")
+
+#####KS tests#####
+
+ks.test(fly.8$EclosionTime, Ucan.8$EclosionTime) #D = 0.32941, p-value = 0.01028**
+ks.test(fly.8$EclosionTime, Dall.8$EclosionTime) #D = 0.24552, p-value = 0.3799
+ks.test(fly.8$EclosionTime, Dmel.8$EclosionTime) #D = 0.31373, p-value = 0.6971
+ks.test(Ucan.8$EclosionTime, Dall.8$EclosionTime) #D = 0.2, p-value = 0.4639
+ks.test(Ucan.8$EclosionTime, Dmel.8$EclosionTime) #D = 0.37647, p-value = 0.4049
+ks.test(Dall.8$EclosionTime, Dmel.8$EclosionTime) #D = 0.43478, p-value = 0.3294
+
+ks.test(fly.16$EclosionTime, Ucan.16$EclosionTime) #D = 0.36552, p-value = 0.0376**
+ks.test(fly.16$EclosionTime, Dall.16$EclosionTime) #D = 0.26847, p-value = 0.7588
+ks.test(Ucan.16$EclosionTime, Dall.16$EclosionTime) #D = 0.21429, p-value = 0.9711
+
+ks.test(fly.24$EclosionTime, Ucan.24$EclosionTime) #D = 0.93333, p-value = 0.09242
+ks.test(fly.24$EclosionTime, Dall.24$EclosionTime) #D = 0.66667, p-value = 0.799
+ks.test(Ucan.24$EclosionTime, Dall.24$EclosionTime) #D = 1, p-value = 0.6667
