@@ -4,9 +4,8 @@
 #by Trinity McIntyre, Lalitya Andaloori, Glen Ray Hood, 
 #Jeffrey L. Feder, Daniel A. Hahn, Gregory J. Ragland, Jantina Toxopeus
 
-#All data are available as a supplementary Excel file
-#associated with the manuscript itself. This Excel file
-#contains explanations of all abbreviations and variable names.
+#All data are available as an Excel file in this repository. 
+#This Excel file contains explanations of all abbreviations and variable names.
 #Each worksheet in the Excel file can be saved as its own  
 #.csv or .txt file for use in the code below with R or RStudio.
 
