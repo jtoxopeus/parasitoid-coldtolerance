@@ -4,10 +4,11 @@
 #by Trinity McIntyre, Lalitya Andaloori, Glen Ray Hood, 
 #Jeffrey L. Feder, Daniel A. Hahn, Gregory J. Ragland, Jantina Toxopeus
 
-#All data are available as an Excel file in this repository. 
-#This Excel file contains explanations of all abbreviations and variable names.
+#All data are available as a supplementary Excel file
+#associated with the manuscript itself. This Excel file
+#contains explanations of all abbreviations and variable names.
 #Each worksheet in the Excel file can be saved as its own  
-#.csv or .txt file for use in the code below with R or RStudio.
+#.csv or .txt file for use in the code below.
 
 
 ##############################################################
@@ -16,9 +17,9 @@
 ##                                                          ##
 ##############################################################
 
-#####Chi squared tests####
-#formatting data for Chi-square test
-counts <- read.csv("DiapauseClassesSummary.csv", stringsAsFactors = FALSE)
+#####G-test#####
+#formatting data for G test
+counts <- read.csv("DiapauseClasses-forR.csv", stringsAsFactors = FALSE)
 str(counts)
 counts
 #diapause categories in separate rows
@@ -28,11 +29,15 @@ counts
 counts <- counts[,2:4]
 rownames(counts) <- c("ND", "WD", "D")
 
-chisq.test(counts)
-#    Pearson's Chi-squared test
+counts <- as.matrix(counts)
+library(DescTools)
+GTest(counts, correct="none") 
+
+#       Log likelihood ratio (G-test) test of independence without correction
 #
 #data:  counts
-#X-squared = 202.39, df = 4, p-value < 2.2e-16
+#G = 248.8, X-squared df = 4, p-value < 2.2e-16
+
 
 ##############################################################
 ##                                                          ##
@@ -96,17 +101,19 @@ Dall.Y <- tapply(Dall.data$N.eclosed, Dall.data$TimeinFridge, sum)
 Dmel.Y <- tapply(Dmel.data$N.eclosed, Dmel.data$TimeinFridge, sum)
 fly.Y <- tapply(fly.data$N.eclosed, fly.data$TimeinFridge, sum)
 
-#####Chi squared tests####
-#formatting data for Chi-square test
+#####G-test#######
 counts <- as.data.frame(rbind(Ucan.Y, Dall.Y, Dmel.Y))
 counts[3,2:3] <- 0
 counts
 
-chisq.test(counts)
-#Pearson's Chi-squared test
+counts <- as.matrix(counts)
+library(DescTools)
+GTest(counts, correct="none") 
+
+#         Log likelihood ratio (G-test) test of independence without correction
 #
 #data:  counts
-#X-squared = 2.1374, df = 4, p-value = 0.7105
+#G = 3.3216, X-squared df = 4, p-value = 0.5055
 
 #####next check if post-chill eclosion patterns differ among species
 #####for each chill duration
